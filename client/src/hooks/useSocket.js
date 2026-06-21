@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 
+  (import.meta.env.DEV ? 'http://localhost:4000' : window.location.origin);
 
 export function useSocket() {
   const socketRef = useRef(null);
