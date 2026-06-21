@@ -1831,7 +1831,9 @@ input {
 
 @media (max-width: 850px) or (max-height: 620px) {
   .game-table {
-    transform: scale(0.68);
+    width: 520px !important;
+    height: 320px !important;
+    transform: scale(0.8) !important;
   }
   .hand-fan {
     transform: scale(0.72);
@@ -1850,10 +1852,12 @@ input {
 
 @media (max-width: 680px) or (max-height: 520px) {
   .game-table {
-    transform: scale(0.55);
+    width: 460px !important;
+    height: 280px !important;
+    transform: scale(0.6) !important;
   }
   .hand-fan {
-    transform: scale(0.62);
+    transform: scale(0.65);
   }
   .my-profile-seat {
     bottom: 8px;
@@ -1864,6 +1868,36 @@ input {
     bottom: 8px;
     right: 8px;
     transform: scale(0.68);
+  }
+}
+
+@media (max-width: 480px) or (max-height: 460px) {
+  .game-table {
+    width: 420px !important;
+    height: 250px !important;
+    transform: scale(0.48) !important;
+  }
+  .hand-fan {
+    transform: scale(0.55);
+  }
+  .my-profile-seat {
+    bottom: 4px;
+    left: 4px;
+    transform: scale(0.58);
+  }
+  .call-uno-3d-btn {
+    bottom: 4px;
+    right: 4px;
+    transform: scale(0.58);
+  }
+  .lobby-box {
+    padding: 30px 20px;
+  }
+  .lobby-waiting-box {
+    padding: 20px;
+  }
+  .lobby-title {
+    font-size: 2.2rem;
   }
 }
 
