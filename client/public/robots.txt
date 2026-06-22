@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Replace the URL below with your actual deployed domain (e.g., https://uno-game.onrender.com/sitemap.xml)
+Sitemap: https://uno-game.onrender.com/sitemap.xml
