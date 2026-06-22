@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://uno-game-autb.onrender.com/sitemap.xml
+Sitemap: https://uno-game-autb.onrender.com/sitemap-index.xml
