@@ -290,15 +290,6 @@ export default function GameBoard({
               TURN: <span className="text-indigo-400">{room.currentTurn === myId ? 'YOURS' : room.players.find(p => p.id === room.currentTurn)?.name}</span>
             </span>
           )}
-
-          <button 
-            onClick={() => setShowMenu(true)}
-            className="p-1.5 bg-slate-800 hover:bg-indigo-950/80 border border-slate-700 hover:border-indigo-900 rounded-lg text-slate-400 hover:text-indigo-300 transition-all flex items-center gap-1"
-            title="Game Menu Options"
-          >
-            <Settings className="w-3.5 h-3.5" />
-            <span className="text-[11px] font-bold">Menu</span>
-          </button>
         </div>
       </div>
 
@@ -516,6 +507,15 @@ export default function GameBoard({
           </div>
         </button>
       )}
+
+      {/* Floating Settings Menu Button in the bottom-right corner */}
+      <button
+        onClick={() => setShowMenu(true)}
+        className="game-menu-trigger-btn"
+        title="Game Menu Options"
+      >
+        <Settings className="w-5 h-5" />
+      </button>
 
       {/* Wild color choosing overlay */}
       {showColorPicker && (

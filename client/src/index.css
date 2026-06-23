@@ -1681,7 +1681,7 @@ input {
 .call-uno-3d-btn {
   position: absolute;
   bottom: 25px;
-  right: 45px;
+  right: 85px;
   width: 92px;
   height: 92px;
   border-radius: 50%;
@@ -1831,9 +1831,14 @@ input {
     left: 16px;
     transform: scale(0.88);
   }
-  .call-uno-3d-btn {
+  .game-menu-trigger-btn {
     bottom: 16px;
     right: 16px;
+    transform: scale(0.88);
+  }
+  .call-uno-3d-btn {
+    bottom: 16px;
+    right: 76px;
     transform: scale(0.88);
   }
 }
@@ -1852,9 +1857,14 @@ input {
     left: 12px;
     transform: scale(0.78);
   }
-  .call-uno-3d-btn {
+  .game-menu-trigger-btn {
     bottom: 12px;
     right: 12px;
+    transform: scale(0.78);
+  }
+  .call-uno-3d-btn {
+    bottom: 12px;
+    right: 68px;
     transform: scale(0.78);
   }
 }
@@ -1873,9 +1883,14 @@ input {
     left: 8px;
     transform: scale(0.68);
   }
-  .call-uno-3d-btn {
+  .game-menu-trigger-btn {
     bottom: 8px;
     right: 8px;
+    transform: scale(0.68);
+  }
+  .call-uno-3d-btn {
+    bottom: 8px;
+    right: 60px;
     transform: scale(0.68);
   }
 }
@@ -1894,9 +1909,14 @@ input {
     left: 4px;
     transform: scale(0.58);
   }
-  .call-uno-3d-btn {
+  .game-menu-trigger-btn {
     bottom: 4px;
     right: 4px;
+    transform: scale(0.58);
+  }
+  .call-uno-3d-btn {
+    bottom: 4px;
+    right: 52px;
     transform: scale(0.58);
   }
   .lobby-box {
@@ -2046,6 +2066,48 @@ input {
     transform: translateX(120px) translateY(0) rotateY(0deg) scale(1);
     box-shadow: 0 6px 15px rgba(0,0,0,0.45);
   }
+}
+
+/* Floating Settings Menu Button (FAB) in the bottom-right corner */
+.game-menu-trigger-btn {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(99, 102, 241, 0.4);
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 150;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(99, 102, 241, 0.15);
+  transform-origin: bottom right;
+  transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), bottom 0.3s, right 0.3s, background-color 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+
+.game-menu-trigger-btn svg {
+  transition: transform 0.4s ease;
+}
+
+.game-menu-trigger-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.8);
+  color: #fff;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35), 0 0 15px rgba(99, 102, 241, 0.25);
+}
+
+.game-menu-trigger-btn:hover svg {
+  transform: rotate(45deg);
+}
+
+.game-menu-trigger-btn:active {
+  transform: translateY(1px);
 }
 
 /* --- GAME PLAY OPTIONS MENU --- */
