@@ -387,6 +387,7 @@ input {
   display: flex;
   gap: 30px;
   z-index: 5;
+  position: relative;
 }
 
 .card-deck-pile, .discard-pile-slot {
