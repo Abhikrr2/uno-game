@@ -1587,10 +1587,12 @@ input {
 }
 
 .fanned-seat-top-center {
-  left: 95px;
-  top: 8px;
+  left: 50%;
+  top: -55px;
+  transform: translateX(-50%);
   flex-direction: row;
   width: 120px;
+  justify-content: center;
 }
 .fanned-seat-top-center .mini-card-back {
   margin-left: -32px;
@@ -1598,10 +1600,12 @@ input {
 }
 
 .fanned-seat-top-left {
-  left: 95px;
-  top: 8px;
+  left: 50%;
+  top: -55px;
+  transform: translateX(-50%);
   flex-direction: row;
   width: 120px;
+  justify-content: center;
 }
 .fanned-seat-top-left .mini-card-back {
   margin-left: -32px;
@@ -1609,10 +1613,12 @@ input {
 }
 
 .fanned-seat-top-right {
-  right: 95px;
-  top: 8px;
+  left: 50%;
+  top: -55px;
+  transform: translateX(-50%);
   flex-direction: row;
   width: 120px;
+  justify-content: center;
 }
 .fanned-seat-top-right .mini-card-back {
   margin-left: -32px;
