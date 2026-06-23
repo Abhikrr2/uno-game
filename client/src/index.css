@@ -2001,3 +2001,50 @@ input {
   }
 }
 
+/* --- START CARD FLIP & FLY ANIMATION --- */
+.flying-start-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 90px;
+  height: 135px;
+  z-index: 200;
+  transform-style: preserve-3d;
+  animation: flyAndFlipStartCard 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  pointer-events: none;
+}
+
+.flying-start-card .card-face {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 12px;
+  margin: 0 !important; /* Reset layout margins */
+}
+
+.flying-start-card .card-back-side {
+  transform: rotateY(180deg);
+}
+
+.flying-start-card .card-front-side {
+  transform: rotateY(0deg);
+}
+
+@keyframes flyAndFlipStartCard {
+  0% {
+    transform: translateX(0) rotateY(180deg) scale(1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+  }
+  50% {
+    transform: translateX(60px) translateY(-35px) rotateY(90deg) scale(1.15);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.6);
+  }
+  100% {
+    transform: translateX(120px) translateY(0) rotateY(0deg) scale(1);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.45);
+  }
+}
+

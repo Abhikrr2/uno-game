@@ -131,6 +131,7 @@ export default function GameBoard({
 
   const [dealingCards, setDealingCards] = useState([]);
   const [isShuffling, setIsShuffling] = useState(false);
+  const [isFlippingStartCard, setIsFlippingStartCard] = useState(false);
   const [activeDealRoom, setActiveDealRoom] = useState(null);
 
   // Staggered round-robin card dealing animations when game starts
@@ -204,16 +205,25 @@ export default function GameBoard({
         const dealDuration = 1200 + (cardsPerPlayer * totalPlayers) * 80 + 600;
         const clearTimer = setTimeout(() => {
           setDealingCards([]);
+          // Start the starting card flip animation
+          setIsFlippingStartCard(true);
         }, dealDuration);
+
+        // Turn off flip card animation after 0.8s
+        const flipTimer = setTimeout(() => {
+          setIsFlippingStartCard(false);
+        }, dealDuration + 800);
 
         return () => {
           clearTimeout(shuffleTimer);
           clearTimeout(clearTimer);
+          clearTimeout(flipTimer);
         };
       }
     } else {
       setActiveDealRoom(null);
       setIsShuffling(false);
+      setIsFlippingStartCard(false);
       setDealingCards([]);
     }
   }, [room?.gameStatus, room?.roomCode]);
@@ -335,7 +345,7 @@ export default function GameBoard({
 
             {/* Discard Pile */}
             <div className="discard-pile-slot">
-              {room.topCard && (
+              {room.topCard && !isFlippingStartCard && (
                 <>
                   <div className="uno-card discard-bg-card-1" />
                   <div className="uno-card discard-bg-card-2" />
@@ -357,6 +367,29 @@ export default function GameBoard({
                 </>
               )}
             </div>
+
+            {/* Flying start card flip animation */}
+            {isFlippingStartCard && room.topCard && (
+              <div className="flying-start-card">
+                {/* Back side of card (shows first) */}
+                <div className="card-face card-back-side card-deck-back">
+                  <div className="deck-inner" style={{ fontSize: '0.7rem' }}>UNO</div>
+                </div>
+                
+                {/* Front side of card */}
+                <div className={`card-face card-front-side uno-card color-${room.currentColor}`}>
+                  <span className="card-mini-symbol symbol-top-left">
+                    {getCardDisplaySymbol(room.topCard)}
+                  </span>
+                  <span className="card-mini-symbol symbol-bottom-right">
+                    {getCardDisplaySymbol(room.topCard)}
+                  </span>
+                  <div className="card-oval">
+                    <span className="card-symbol">{getCardDisplaySymbol(room.topCard)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Player seats around the table (Opponents only) */}
