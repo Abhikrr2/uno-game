@@ -150,9 +150,43 @@ export default function GameBoard({
           for (let p = 0; p < totalPlayers; p++) {
             const seatClass = getSeatClass(p);
             
+            // Calculate prototype coordinates
+            let targetX = '0px';
+            let targetY = '0px';
+            let rotation = '0deg';
+
+            if (seatClass === 'my-profile-seat') {
+              targetX = `${(c - 3) * 32}px`;
+              targetY = '240px';
+              rotation = `${(c - 3) * 5}deg`;
+            } else if (seatClass === 'seat-left') {
+              targetX = '-340px';
+              targetY = `${(c - 3) * 22}px`;
+              rotation = `${90 + (c - 3) * 5}deg`;
+            } else if (seatClass === 'seat-right') {
+              targetX = '340px';
+              targetY = `${(c - 3) * -22}px`;
+              rotation = `${-90 + (c - 3) * 5}deg`;
+            } else if (seatClass === 'seat-top-center') {
+              targetX = `${(c - 3) * -32}px`;
+              targetY = '-240px';
+              rotation = `${180 + (c - 3) * -5}deg`;
+            } else if (seatClass === 'seat-top-left') {
+              targetX = '-260px';
+              targetY = '-180px';
+              rotation = `${135 + (c - 3) * -5}deg`;
+            } else if (seatClass === 'seat-top-right') {
+              targetX = '260px';
+              targetY = '-180px';
+              rotation = `${-135 + (c - 3) * 5}deg`;
+            }
+
             newDealingCards.push({
               id: `deal-${c}-${p}`,
               seatClass,
+              targetX,
+              targetY,
+              rotation,
               // Stagger start after the 1.2s shuffle animation completes
               delay: 1.2 + (c * totalPlayers + p) * 0.08
             });
@@ -256,8 +290,11 @@ export default function GameBoard({
           {dealingCards.map((card) => (
             <div
               key={card.id}
-              className={`dealing-card card-deck-back ${card.seatClass}`}
+              className="dealing-card-proto card-deck-back"
               style={{
+                '--target-x': card.targetX,
+                '--target-y': card.targetY,
+                '--target-rot': card.rotation,
                 animationDelay: `${card.delay}s`
               }}
             >
