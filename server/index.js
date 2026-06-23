@@ -747,13 +747,18 @@ io.on('connection', (socket) => {
     });
   });
 
-  // Reset Room (to play again)
+  // Reset Room (to play again / end game)
   socket.on('resetRoom', async ({ roomCode }) => {
     const user = await store.getUser(socket.id);
     if (!user) return;
 
     const room = await store.getRoom(roomCode);
     if (!room) return;
+
+    // Check if user is the host
+    if (room.hostId !== user.id) {
+      return socket.emit('error', 'Only the host can reset the room or end the game');
+    }
 
     // Reset room state
     room.gameStatus = 'waiting';

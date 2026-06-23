@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, ShieldAlert, Award, RefreshCw, LogOut } from 'lucide-react';
+import { AlertCircle, ShieldAlert, Award, RefreshCw, LogOut, Settings, X } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import PlayerHand from './PlayerHand';
 
@@ -22,6 +22,7 @@ export default function GameBoard({
 }) {
   const [selectedWildCard, setSelectedWildCard] = useState(null);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [activeBubbles, setActiveBubbles] = useState({}); // playerId -> bubbleContent
 
   // Trigger confetti when game is finished
@@ -278,7 +279,7 @@ export default function GameBoard({
           </div>
         )}
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3.5">
           {room.challenge ? (
             <span className="text-xs text-amber-400 font-bold animate-pulse flex items-center gap-1.5 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
               <ShieldAlert className="w-3.5 h-3.5" />
@@ -289,6 +290,15 @@ export default function GameBoard({
               TURN: <span className="text-indigo-400">{room.currentTurn === myId ? 'YOURS' : room.players.find(p => p.id === room.currentTurn)?.name}</span>
             </span>
           )}
+
+          <button 
+            onClick={() => setShowMenu(true)}
+            className="p-1.5 bg-slate-800 hover:bg-indigo-950/80 border border-slate-700 hover:border-indigo-900 rounded-lg text-slate-400 hover:text-indigo-300 transition-all flex items-center gap-1"
+            title="Game Menu Options"
+          >
+            <Settings className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-bold">Menu</span>
+          </button>
         </div>
       </div>
 
@@ -609,6 +619,72 @@ export default function GameBoard({
             penaltyCardType={room.penaltyCardType}
             onPlayCard={handleCardClick}
           />
+        </div>
+      )}
+
+      {/* Game Options Menu Overlay */}
+      {showMenu && (
+        <div className="game-menu-overlay">
+          <div className="game-menu-card">
+            <div className="game-menu-header">
+              <h3 className="game-menu-title">
+                <Settings className="w-5 h-5 text-indigo-400" />
+                Game Menu
+              </h3>
+              <button 
+                onClick={() => setShowMenu(false)}
+                className="game-menu-close"
+                title="Resume Game"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="game-menu-body">
+              <p className="mb-3 text-slate-300">Choose an option below. Leaving or ending the game will interrupt the current match.</p>
+              <div className="text-xs text-slate-400 bg-slate-950/40 p-3 rounded-xl border border-slate-800 flex flex-col gap-1.5">
+                <div>Room Code: <strong className="text-yellow-400">{room.roomCode}</strong></div>
+                <div>Role: <strong className="text-indigo-400">{isHost ? 'Host' : 'Player'}</strong></div>
+              </div>
+            </div>
+
+            <div className="game-menu-actions">
+              <button
+                onClick={() => setShowMenu(false)}
+                className="game-menu-btn resume"
+              >
+                Resume Game
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowMenu(false);
+                  if (window.confirm("Are you sure you want to leave this game room?")) {
+                    leaveRoom();
+                  }
+                }}
+                className="game-menu-btn exit"
+              >
+                <LogOut className="w-4 h-4" />
+                Exit Room (Leave Game)
+              </button>
+
+              {isHost && (
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    if (window.confirm("End Game? This will stop the game for everyone and return all players to the lobby.")) {
+                      resetRoom();
+                    }
+                  }}
+                  className="game-menu-btn end"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  End Game (Reset to Lobby)
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
