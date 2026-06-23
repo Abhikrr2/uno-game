@@ -45,3 +45,6 @@ pnpm-debug.log*
 # Lockfiles (if using yarn or pnpm instead of npm)
 yarn.lock
 pnpm-lock.yaml
+
+# PDF Reports
+*.pdf
