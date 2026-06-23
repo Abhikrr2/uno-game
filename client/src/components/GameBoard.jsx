@@ -346,7 +346,7 @@ export default function GameBoard({
 
             {/* Discard Pile */}
             <div className="discard-pile-slot">
-              {room.topCard && !isFlippingStartCard && (
+              {room.topCard && !isShuffling && dealingCards.length === 0 && !isFlippingStartCard && (
                 <>
                   <div className="uno-card discard-bg-card-1" />
                   <div className="uno-card discard-bg-card-2" />
