@@ -156,28 +156,28 @@ export default function GameBoard({
             let rotation = '0deg';
 
             if (seatClass === 'my-profile-seat') {
-              targetX = `${(c - 3) * 32}px`;
-              targetY = '240px';
+              targetX = `${(c - 3) * 36}px`;
+              targetY = '320px';
               rotation = `${(c - 3) * 5}deg`;
             } else if (seatClass === 'seat-left') {
-              targetX = '-340px';
+              targetX = '-420px';
               targetY = `${(c - 3) * 22}px`;
               rotation = `${90 + (c - 3) * 5}deg`;
             } else if (seatClass === 'seat-right') {
-              targetX = '340px';
+              targetX = '420px';
               targetY = `${(c - 3) * -22}px`;
               rotation = `${-90 + (c - 3) * 5}deg`;
             } else if (seatClass === 'seat-top-center') {
-              targetX = `${(c - 3) * -32}px`;
-              targetY = '-240px';
+              targetX = `${(c - 3) * -36}px`;
+              targetY = '-320px';
               rotation = `${180 + (c - 3) * -5}deg`;
             } else if (seatClass === 'seat-top-left') {
-              targetX = '-260px';
-              targetY = '-180px';
+              targetX = '-340px';
+              targetY = '-240px';
               rotation = `${135 + (c - 3) * -5}deg`;
             } else if (seatClass === 'seat-top-right') {
-              targetX = '260px';
-              targetY = '-180px';
+              targetX = '340px';
+              targetY = '-240px';
               rotation = `${-135 + (c - 3) * 5}deg`;
             }
 

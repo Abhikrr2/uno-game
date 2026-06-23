@@ -315,10 +315,10 @@ input {
 
 .game-table {
   position: relative;
-  width: 82%;
-  height: 65%;
-  max-width: 850px;
-  max-height: 460px;
+  width: 85%;
+  height: 72%;
+  max-width: 1050px;
+  max-height: 580px;
   border-radius: 50% / 50%;
   background: radial-gradient(ellipse at center, #2e7d32 0%, #1b5e20 70%, #0d3c0e 100%);
   border: 12px solid #5d4037;
@@ -381,9 +381,9 @@ input {
 }
 
 .card-deck-pile, .discard-pile-slot {
-  width: 76px;
-  height: 114px;
-  border-radius: 10px;
+  width: 90px;
+  height: 135px;
+  border-radius: 12px;
   position: relative;
 }
 
@@ -453,12 +453,12 @@ input {
 }
 
 .uno-card {
-  width: 76px;
-  height: 114px;
-  border-radius: 10px;
+  width: 90px;
+  height: 135px;
+  border-radius: 12px;
   background-color: #1e293b;
-  border: 3.5px solid #ffffff;
-  box-shadow: 0 5px 12px rgba(0,0,0,0.35), inset 0 0 0 1.5px #000000; /* Inside black line */
+  border: 4.0px solid #ffffff;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.45), inset 0 0 0 2px #000000; /* Inside black line */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -509,7 +509,7 @@ input {
 .card-symbol {
   font-family: var(--font-display);
   font-weight: 900;
-  font-size: 2.2rem;
+  font-size: 2.6rem;
   transform: rotate(18deg);
   text-shadow: 1px 1px 1px rgba(0,0,0,0.1);
 }
@@ -526,12 +526,12 @@ input {
   position: absolute;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   color: #ffffff;
   text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
 }
-.symbol-top-left { top: 6px; left: 8px; }
-.symbol-bottom-right { bottom: 6px; right: 8px; transform: rotate(180deg); }
+.symbol-top-left { top: 8px; left: 10px; }
+.symbol-bottom-right { bottom: 8px; right: 10px; transform: rotate(180deg); }
 
 /* Color choosing overlay */
 .color-picker-overlay {
@@ -809,7 +809,7 @@ input {
 
 /* Card fan spacing rules based on card count */
 .hand-fan .uno-card {
-  margin-left: -35px;
+  margin-left: -45px;
 }
 .hand-fan .uno-card:first-child {
   margin-left: 0;
@@ -1567,10 +1567,10 @@ input {
   top: 50%;
   transform: translateY(-50%);
   flex-direction: column;
-  height: 90px;
+  height: 120px;
 }
 .fanned-seat-left .mini-card-back {
-  margin-top: -38px;
+  margin-top: -52px;
   transform: rotate(calc(-30deg + (var(--card-index) * 15deg))) translateX(calc(var(--card-index) * 4px));
 }
 
@@ -1579,10 +1579,10 @@ input {
   top: 50%;
   transform: translateY(-50%);
   flex-direction: column;
-  height: 90px;
+  height: 120px;
 }
 .fanned-seat-right .mini-card-back {
-  margin-top: -38px;
+  margin-top: -52px;
   transform: rotate(calc(30deg - (var(--card-index) * 15deg))) translateX(calc(var(--card-index) * -4px));
 }
 
@@ -1590,10 +1590,10 @@ input {
   left: 95px;
   top: 8px;
   flex-direction: row;
-  width: 90px;
+  width: 120px;
 }
 .fanned-seat-top-center .mini-card-back {
-  margin-left: -22px;
+  margin-left: -32px;
   transform: rotate(calc(-10deg + (var(--card-index) * 8deg))) translateY(calc(var(--card-index) * -1px));
 }
 
@@ -1601,10 +1601,10 @@ input {
   left: 95px;
   top: 8px;
   flex-direction: row;
-  width: 90px;
+  width: 120px;
 }
 .fanned-seat-top-left .mini-card-back {
-  margin-left: -22px;
+  margin-left: -32px;
   transform: rotate(calc(-10deg + (var(--card-index) * 8deg))) translateY(calc(var(--card-index) * -1px));
 }
 
@@ -1612,20 +1612,20 @@ input {
   right: 95px;
   top: 8px;
   flex-direction: row;
-  width: 90px;
+  width: 120px;
 }
 .fanned-seat-top-right .mini-card-back {
-  margin-left: -22px;
+  margin-left: -32px;
   transform: rotate(calc(10deg - (var(--card-index) * 8deg))) translateY(calc(var(--card-index) * -1px));
 }
 
 .mini-card-back {
-  width: 38px;
-  height: 56px;
-  border-radius: 4px;
+  width: 50px;
+  height: 75px;
+  border-radius: 6px;
   background: #111;
-  border: 1.5px solid #fff;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+  border: 2px solid #fff;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1965,16 +1965,16 @@ input {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 50px;
-  height: 75px;
-  margin-top: -37.5px;
-  margin-left: -25px;
+  width: 90px;
+  height: 135px;
+  margin-top: -67.5px;
+  margin-left: -45px;
   z-index: 100;
   pointer-events: none;
   opacity: 0;
-  border-radius: 6px;
-  border-width: 2px !important;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+  border-radius: 12px;
+  border: 3.5px solid #fff;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.5) !important;
   animation: dealToSeatProto 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
