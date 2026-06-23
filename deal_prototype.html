@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UNO Card Dealing Animation Prototype</title>
+  <style>
+    /* Sleek premium background */
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #1e293b, #090d16);
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      color: #fff;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #3b82f6, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+
+    p {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin: 5px 0 20px 0;
+      text-align: center;
+    }
+
+    /* 3D Game Table */
+    .table-container {
+      position: relative;
+      width: 90vw;
+      height: 70vh;
+      max-width: 1000px;
+      max-height: 600px;
+      border: 4px solid rgba(255, 255, 255, 0.05);
+      border-radius: 150px;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(10px);
+      box-shadow: inset 0 0 50px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      perspective: 1200px;
+    }
+
+    /* Center Deck & Discard Space */
+    .center-pile {
+      position: absolute;
+      width: 120px;
+      height: 170px;
+      perspective: 800px;
+      transform-style: preserve-3d;
+      z-index: 10;
+    }
+
+    .deck {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transform: rotateX(20deg) rotateY(-10deg);
+    }
+
+    /* Base card styles */
+    .card {
+      position: absolute;
+      width: 90px;
+      height: 130px;
+      border-radius: 10px;
+      background: #1e293b;
+      border: 2px solid #f8fafc;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      transform-style: preserve-3d;
+      backface-visibility: hidden;
+      transition: all 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+      /* Stacked at center by default */
+      top: 20px;
+      left: 15px;
+      transform: translateZ(calc(var(--card-index) * 1.5px)) rotate(calc(var(--card-index) * 0.2deg));
+    }
+
+    .card-back {
+      width: calc(100% - 10px);
+      height: calc(100% - 10px);
+      margin: 5px;
+      border-radius: 6px;
+      background: radial-gradient(circle, #dc2626 60%, #991b1b);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #fcd34d;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      font-style: italic;
+      font-size: 0.9rem;
+      font-weight: 900;
+      border: 1px solid #fcd34d;
+      box-sizing: border-box;
+    }
+
+    /* Shuffling animations keyframes */
+    .shuffling .card {
+      animation: shuffle-card 1.0s ease-in-out infinite;
+    }
+    .shuffling .card:nth-child(even) { animation-delay: 0.15s; }
+    .shuffling .card:nth-child(3n) { animation-delay: 0.3s; }
+    .shuffling .card:nth-child(4n) { animation-delay: 0.45s; }
+
+    @keyframes shuffle-card {
+      0%, 100% {
+        transform: translateZ(calc(var(--card-index) * 1.5px)) rotate(calc(var(--card-index) * 0.2deg));
+      }
+      30% {
+        transform: translateX(calc(var(--dir, -1) * 90px)) translateY(-15px) translateZ(40px) rotateY(20deg);
+      }
+      60% {
+        transform: translateX(calc(var(--dir, -1) * -10px)) translateY(0px) translateZ(10px) rotateY(-5deg);
+      }
+    }
+
+    /* Player Area Labels */
+    .player-label {
+      position: absolute;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 6px 14px;
+      border-radius: 20px;
+      color: #94a3b8;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Seat coordinates & styling */
+    .seat-bottom { bottom: 15px; left: 50%; transform: translateX(-50%); }
+    .seat-left { left: 15px; top: 50%; transform: translateY(-50%); }
+    .seat-top { top: 15px; left: 50%; transform: translateX(-50%); }
+    .seat-right { right: 15px; top: 50%; transform: translateY(-50%); }
+
+    /* Dealt hand fan position overrides */
+    /* Dealt cards will have inline style overrides for transform and transition, calculated by JS */
+    .card.dealt {
+      z-index: 20;
+    }
+
+    /* Control panel styling */
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #fff;
+      border: none;
+      padding: 14px 35px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 25px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-reset {
+      background: #334155;
+      box-shadow: none;
+    }
+    .btn-reset:hover {
+      background: #475569;
+      box-shadow: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>UNO 3D Card Dealer</h1>
+  <p>Prototype: Shuffles and deals 7 cards to each of the 4 players</p>
+
+  <div class="table-container">
+    <!-- Player labels representing seats -->
+    <div class="player-label seat-bottom" id="label-0">Player 1 (You)</div>
+    <div class="player-label seat-left" id="label-1">Player 2</div>
+    <div class="player-label seat-top" id="label-2">Player 3</div>
+    <div class="player-label seat-right" id="label-3">Player 4</div>
+
+    <!-- Center deck pile -->
+    <div class="center-pile">
+      <div class="deck" id="deck">
+        <!-- 28 Cards for dealing (7 cards * 4 players) -->
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" id="startBtn">Shuffle & Deal</button>
+    <button class="btn btn-reset" id="resetBtn" disabled>Reset</button>
+  </div>
+
+  <script>
+    const deckElement = document.getElementById('deck');
+    const startBtn = document.getElementById('startBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    const totalPlayers = 4;
+    const cardsPerPlayer = 7;
+    const totalCards = totalPlayers * cardsPerPlayer;
+    let cards = [];
+
+    // Initialize cards inside center deck
+    function initDeck() {
+      deckElement.innerHTML = '';
+      cards = [];
+      for (let i = 0; i < totalCards; i++) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.setProperty('--card-index', i);
+        // Alternate directions for shuffle animations
+        card.style.setProperty('--dir', i % 2 === 0 ? 1 : -1);
+
+        const inner = document.createElement('div');
+        inner.className = 'card-back';
+        inner.textContent = 'UNO';
+        card.appendChild(inner);
+
+        deckElement.appendChild(card);
+        cards.push(card);
+      }
+    }
+
+    initDeck();
+
+    // Start Deal Animation Sequence
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      resetBtn.disabled = true;
+
+      // Step 1: Trigger Shuffle Animation
+      deckElement.classList.add('shuffling');
+      startBtn.textContent = 'Shuffling...';
+      
+      // Wait for shuffle (1.5 seconds)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      deckElement.classList.remove('shuffling');
+      
+      // Step 2: Deal cards one by one (round-robin)
+      startBtn.textContent = 'Dealing...';
+      
+      // We will deal cards in round-robin order: Player 0, 1, 2, 3...
+      // Card count indexes per player to compute fans
+      const playerCardCounts = [0, 0, 0, 0];
+
+      for (let c = 0; c < cardsPerPlayer; c++) {
+        for (let p = 0; p < totalPlayers; p++) {
+          const cardIdx = c * totalPlayers + p;
+          const card = cards[cardIdx];
+          
+          if (!card) continue;
+
+          // Track card count for current player to align fans
+          const cardNum = playerCardCounts[p];
+          playerCardCounts[p]++;
+
+          dealCardToPlayer(card, p, cardNum);
+
+          // Stagger deal interval (80ms delay between cards for speed and smoothness)
+          await new Promise(resolve => setTimeout(resolve, 90));
+        }
+      }
+
+      startBtn.textContent = 'Done!';
+      resetBtn.disabled = false;
+    });
+
+    // Reset layout
+    resetBtn.addEventListener('click', () => {
+      initDeck();
+      startBtn.textContent = 'Shuffle & Deal';
+      startBtn.disabled = false;
+      resetBtn.disabled = true;
+    });
+
+    // Helper to calculate fanned flight paths for cards
+    function dealCardToPlayer(card, playerIdx, cardNum) {
+      card.classList.add('dealt');
+
+      // Constants for positions
+      const tableWidth = document.querySelector('.table-container').clientWidth;
+      const tableHeight = document.querySelector('.table-container').clientHeight;
+
+      let targetX = 0;
+      let targetY = 0;
+      let rotation = 0;
+
+      // Base translation coordinates depending on target seat
+      if (playerIdx === 0) {
+        // Player 1: Bottom center (fanned horizontally)
+        const offset = (cardNum - 3) * 32; // Offset center fanned positions
+        targetX = offset;
+        targetY = (tableHeight / 2) - 100;
+        rotation = (cardNum - 3) * 5; // Slight fan rotation
+      } 
+      else if (playerIdx === 1) {
+        // Player 2: Left center (fanned vertically)
+        const offset = (cardNum - 3) * 22;
+        targetX = -(tableWidth / 2) + 100;
+        targetY = offset;
+        rotation = 90 + (cardNum - 3) * 4;
+      } 
+      else if (playerIdx === 2) {
+        // Player 3: Top center (fanned horizontally)
+        const offset = (cardNum - 3) * 32;
+        targetX = -offset;
+        targetY = -(tableHeight / 2) + 100;
+        rotation = 180 + (cardNum - 3) * -5;
+      } 
+      else if (playerIdx === 3) {
+        // Player 4: Right center (fanned vertically)
+        const offset = (cardNum - 3) * 22;
+        targetX = (tableWidth / 2) - 100;
+        targetY = -offset;
+        rotation = -90 + (cardNum - 3) * 4;
+      }
+
+      // Apply coordinates using CSS transform styles (overrides default center stack styles)
+      card.style.transform = `translate(${targetX}px, ${targetY}px) translateZ(${cardNum * 2}px) rotate(${rotation}deg)`;
+    }
+  </script>
+</body>
+</html>

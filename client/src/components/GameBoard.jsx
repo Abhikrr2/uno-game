@@ -130,6 +130,7 @@ export default function GameBoard({
   }
 
   const [dealingCards, setDealingCards] = useState([]);
+  const [isShuffling, setIsShuffling] = useState(false);
   const [activeDealRoom, setActiveDealRoom] = useState(null);
 
   // Staggered round-robin card dealing animations when game starts
@@ -139,6 +140,9 @@ export default function GameBoard({
       if (activeDealRoom !== room.roomCode) {
         setActiveDealRoom(room.roomCode);
         
+        // Start shuffling first
+        setIsShuffling(true);
+
         const cardsPerPlayer = 7;
         const newDealingCards = [];
 
@@ -149,22 +153,34 @@ export default function GameBoard({
             newDealingCards.push({
               id: `deal-${c}-${p}`,
               seatClass,
-              delay: (c * totalPlayers + p) * 0.08
+              // Stagger start after the 1.2s shuffle animation completes
+              delay: 1.2 + (c * totalPlayers + p) * 0.08
             });
           }
         }
 
+        // Stop shuffling after 1.2 seconds
+        const shuffleTimer = setTimeout(() => {
+          setIsShuffling(false);
+        }, 1200);
+
         setDealingCards(newDealingCards);
 
-        const duration = (cardsPerPlayer * totalPlayers) * 80 + 600;
-        const timer = setTimeout(() => {
+        // Clear dealing state after dealing animations finish
+        const dealDuration = 1200 + (cardsPerPlayer * totalPlayers) * 80 + 600;
+        const clearTimer = setTimeout(() => {
           setDealingCards([]);
-        }, duration);
+        }, dealDuration);
 
-        return () => clearTimeout(timer);
+        return () => {
+          clearTimeout(shuffleTimer);
+          clearTimeout(clearTimer);
+        };
       }
     } else {
       setActiveDealRoom(null);
+      setIsShuffling(false);
+      setDealingCards([]);
     }
   }, [room?.gameStatus, room?.roomCode]);
 
@@ -252,13 +268,31 @@ export default function GameBoard({
           {/* Center piles (Draw Deck & Discard Pile) */}
           <div className="center-pile">
             {/* Draw Deck */}
-            <div className="card-deck-pile">
-              <div 
-                className="card-deck-back"
-                onClick={() => isMyTurn && !drawnPrivateCard && drawCard()}
-              >
-                <div className="deck-inner">UNO</div>
-              </div>
+            <div className={`card-deck-pile ${isShuffling ? 'shuffling-deck' : ''}`}>
+              {isShuffling ? (
+                Array.from({ length: 8 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="card-deck-back shuffling-card"
+                    style={{
+                      '--card-index': i,
+                      '--direction': i % 2 === 0 ? 1 : -1,
+                      position: 'absolute',
+                      top: 0,
+                      left: 0
+                    }}
+                  >
+                    <div className="deck-inner" style={{ fontSize: '0.7rem' }}>UNO</div>
+                  </div>
+                ))
+              ) : (
+                <div 
+                  className="card-deck-back"
+                  onClick={() => isMyTurn && !drawnPrivateCard && drawCard()}
+                >
+                  <div className="deck-inner">UNO</div>
+                </div>
+              )}
               <span className="deck-count">{room.deckCount} left</span>
             </div>
 

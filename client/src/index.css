@@ -1937,3 +1937,26 @@ input {
   }
 }
 
+/* --- CARD DECK SHUFFLING ANIMATION --- */
+.shuffling-deck {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.shuffling-card {
+  animation: shuffle-card-main 1.2s ease-in-out infinite;
+  transform: translateZ(calc(var(--card-index) * 1.5px)) rotate(calc(var(--card-index) * 0.2deg));
+}
+
+@keyframes shuffle-card-main {
+  0%, 100% {
+    transform: translateZ(calc(var(--card-index) * 1.5px)) rotate(calc(var(--card-index) * 0.2deg));
+  }
+  30% {
+    transform: translateX(calc(var(--direction, -1) * 80px)) translateY(-10px) translateZ(40px) rotateY(20deg);
+  }
+  60% {
+    transform: translateX(calc(var(--direction, -1) * -10px)) translateY(0px) translateZ(10px) rotateY(-5deg);
+  }
+}
+
