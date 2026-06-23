@@ -806,7 +806,6 @@ input {
   overflow-x: auto;
   padding: 20px 20px 10px 20px;
   display: flex;
-  justify-content: center;
 }
 
 .hand-fan {
@@ -815,6 +814,7 @@ input {
   align-items: center;
   height: 160px;
   min-width: max-content;
+  margin: 0 auto;
 }
 
 /* Card fan spacing rules based on card count */
@@ -1934,6 +1934,20 @@ input {
   }
   .lobby-title {
     font-size: 2.2rem;
+  }
+  .lobby-logo {
+    font-size: 2.8rem;
+  }
+  .lobby-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 25px;
+  }
+  .lobby-btn-group-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .game-sidebar {
+    grid-template-columns: 1fr 130px !important;
   }
 }
 
