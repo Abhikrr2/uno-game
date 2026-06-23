@@ -12,6 +12,8 @@ export default function GameBoard({
   drawCard,
   passTurn,
   declareUno,
+  acceptChallenge,
+  executeChallenge,
   reportNoUno,
   resetRoom,
   leaveRoom,
@@ -85,7 +87,7 @@ export default function GameBoard({
 
   const myId = guest.id;
   const myPlayerState = room.players.find(p => p.id === myId);
-  const isMyTurn = room.currentTurn === myId;
+  const isMyTurn = room.currentTurn === myId && !room.challenge;
   const isHost = room.hostId === myId;
 
   const myIndex = room.players.findIndex(p => p.id === myId);
@@ -217,9 +219,16 @@ export default function GameBoard({
         )}
 
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400 font-semibold">
-            TURN: <span className="text-indigo-400">{isMyTurn ? 'YOURS' : room.players.find(p => p.id === room.currentTurn)?.name}</span>
-          </span>
+          {room.challenge ? (
+            <span className="text-xs text-amber-400 font-bold animate-pulse flex items-center gap-1.5 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/30">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              CHALLENGE PENDING: {room.challenge.challengerId === myId ? 'YOU are' : `${room.players.find(p => p.id === room.challenge.challengerId)?.name} is`} deciding...
+            </span>
+          ) : (
+            <span className="text-xs text-slate-400 font-semibold">
+              TURN: <span className="text-indigo-400">{room.currentTurn === myId ? 'YOURS' : room.players.find(p => p.id === room.currentTurn)?.name}</span>
+            </span>
+          )}
         </div>
       </div>
 
@@ -407,6 +416,32 @@ export default function GameBoard({
                 className={`color-choice-btn ${color}`}
               />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Wild Draw Four Challenge Modal */}
+      {room.challenge && room.challenge.challengerId === myId && (
+        <div className="color-picker-overlay z-[200]">
+          <ShieldAlert className="w-14 h-14 text-yellow-500 animate-pulse mb-3" />
+          <h3 className="font-bold text-lg text-slate-200">Challenge Wild Draw Four?</h3>
+          <p className="text-xs text-slate-400 text-center max-w-[280px] mt-1 mb-4 leading-relaxed">
+            Do you think they played the Wild Draw Four illegally (i.e. they had a card matching the previous color)?
+          </p>
+          
+          <div className="flex gap-4 w-full px-4 justify-center">
+            <button
+              onClick={acceptChallenge}
+              className="secondary-btn px-6 py-2.5 text-xs rounded-full flex-1 max-w-[140px]"
+            >
+              Accept (+4)
+            </button>
+            <button
+              onClick={executeChallenge}
+              className="primary-btn px-6 py-2.5 text-xs rounded-full flex-1 max-w-[140px] bg-yellow-500 hover:bg-yellow-600 text-slate-950 font-bold"
+            >
+              Challenge!
+            </button>
           </div>
         </div>
       )}

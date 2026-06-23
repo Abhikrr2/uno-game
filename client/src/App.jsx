@@ -26,6 +26,8 @@ export default function App() {
     drawCard,
     passTurn,
     declareUno,
+    acceptChallenge,
+    executeChallenge,
     reportNoUno,
     sendMessage,
     sendReaction,
@@ -69,6 +71,8 @@ export default function App() {
               drawCard={drawCard}
               passTurn={passTurn}
               declareUno={declareUno}
+              acceptChallenge={acceptChallenge}
+              executeChallenge={executeChallenge}
               reportNoUno={reportNoUno}
               resetRoom={resetRoom}
               leaveRoom={leaveRoom}

@@ -12,7 +12,9 @@ const {
   passTurn,
   declareUno,
   reportNoUno,
-  advanceTurn
+  advanceTurn,
+  acceptChallenge,
+  executeChallenge
 } = require('./gameLogic/turnManager');
 
 const app = express();
@@ -84,6 +86,9 @@ function sanitizeRoomState(roomState, targetPlayerId) {
     direction: roomState.direction,
     penaltyAccumulator: roomState.penaltyAccumulator,
     penaltyCardType: roomState.penaltyCardType,
+    challenge: roomState.challenge,
+    challengeSuccess: roomState.challengeSuccess,
+    lastChallengeResult: roomState.lastChallengeResult,
     winner: roomState.winner ? { id: roomState.winner.id, name: roomState.winner.name } : null,
     players: roomState.players.map(p => ({
       id: p.id,
@@ -190,6 +195,15 @@ async function triggerBotMoveIfActive(roomCode) {
         }
       } else if (decision.action === 'draw_pass') {
         sendSystemMessage(roomCode, `${currentPlayer.name} has no matching cards and draws a card.`);
+      } else if (decision.action === 'challenge_accept') {
+        sendSystemMessage(roomCode, `${currentPlayer.name} accepted the +4 Draw and drew 4 cards.`);
+      } else if (decision.action === 'challenge_execute') {
+        const result = currentRoom.lastChallengeResult;
+        if (result.success) {
+          sendSystemMessage(roomCode, `🔍 CHALLENGE SUCCESSFUL! ${result.targetName} had a card matching the previous color! ${result.targetName} draws 4 cards as penalty.`);
+        } else {
+          sendSystemMessage(roomCode, `🔍 CHALLENGE FAILED! ${result.targetName} did not have a matching color card. ${currentPlayer.name} draws 6 cards and loses their turn.`);
+        }
       }
 
       if (currentRoom.gameStatus === 'finished') {
@@ -652,6 +666,56 @@ io.on('connection', (socket) => {
       } else {
         socket.emit('error', 'That player cannot be reported.');
       }
+    } catch (err) {
+      socket.emit('error', err.message);
+    }
+  });
+
+  // Accept Draw Four Challenge
+  socket.on('acceptChallenge', async ({ roomCode }) => {
+    const user = await store.getUser(socket.id);
+    if (!user) return;
+
+    let room = await store.getRoom(roomCode);
+    if (!room) return;
+
+    try {
+      room = acceptChallenge(room, user.id);
+      await store.setRoom(roomCode, room);
+
+      sendSystemMessage(roomCode, `${user.name} accepted the +4 Draw and drew 4 cards.`);
+      await broadcastRoomUpdate(roomCode);
+      triggerBotMoveIfActive(roomCode);
+    } catch (err) {
+      socket.emit('error', err.message);
+    }
+  });
+
+  // Execute Draw Four Challenge
+  socket.on('executeChallenge', async ({ roomCode }) => {
+    const user = await store.getUser(socket.id);
+    if (!user) return;
+
+    let room = await store.getRoom(roomCode);
+    if (!room) return;
+
+    try {
+      const challengerName = user.name;
+      const targetPlayer = room.players.find(p => p.id === room.challenge.targetId);
+      const targetName = targetPlayer ? targetPlayer.name : 'Target';
+
+      room = executeChallenge(room, user.id);
+      await store.setRoom(roomCode, room);
+
+      const result = room.lastChallengeResult;
+      if (result.success) {
+        sendSystemMessage(roomCode, `🔍 CHALLENGE SUCCESSFUL! ${targetName} had a card matching the previous color! ${targetName} draws 4 cards as penalty.`);
+      } else {
+        sendSystemMessage(roomCode, `🔍 CHALLENGE FAILED! ${targetName} did not have a matching color card. ${challengerName} draws 6 cards and loses their turn.`);
+      }
+
+      await broadcastRoomUpdate(roomCode);
+      triggerBotMoveIfActive(roomCode);
     } catch (err) {
       socket.emit('error', err.message);
     }

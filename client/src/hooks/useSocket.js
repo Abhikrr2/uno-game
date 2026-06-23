@@ -183,6 +183,18 @@ export function useSocket() {
     }
   }, [isConnected, room]);
 
+  const acceptChallenge = useCallback(() => {
+    if (socketRef.current && room && isConnected) {
+      socketRef.current.emit('acceptChallenge', { roomCode: room.roomCode });
+    }
+  }, [isConnected, room]);
+
+  const executeChallenge = useCallback(() => {
+    if (socketRef.current && room && isConnected) {
+      socketRef.current.emit('executeChallenge', { roomCode: room.roomCode });
+    }
+  }, [isConnected, room]);
+
   const reportNoUno = useCallback((targetPlayerId) => {
     if (socketRef.current && room && isConnected) {
       socketRef.current.emit('reportNoUno', { roomCode: room.roomCode, targetPlayerId });
@@ -245,6 +257,8 @@ export function useSocket() {
     drawCard,
     passTurn,
     declareUno,
+    acceptChallenge,
+    executeChallenge,
     reportNoUno,
     sendMessage,
     sendReaction,

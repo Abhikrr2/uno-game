@@ -39,6 +39,30 @@ function makeBotMove(roomState, botId, forceUnoSuccess = null) {
     return { roomState: state };
   }
 
+  // Handle pending challenge if the bot is the challenger
+  if (state.challenge) {
+    if (state.challenge.challengerId === botId) {
+      const shouldChallenge = Math.random() < 0.35; // 35% chance to challenge
+      let updatedState;
+      let actionResult;
+      if (shouldChallenge) {
+        updatedState = turnManager.executeChallenge(state, botId);
+        actionResult = 'challenge_execute';
+      } else {
+        updatedState = turnManager.acceptChallenge(state, botId);
+        actionResult = 'challenge_accept';
+      }
+      return {
+        action: actionResult,
+        challengeSuccess: updatedState.challengeSuccess,
+        roomState: updatedState
+      };
+    } else {
+      // A challenge is pending for someone else, the bot cannot play.
+      return { roomState: state };
+    }
+  }
+
   const playableCards = botState.cards.filter(card =>
     validator.isValidPlay(card, state.topCard, state.currentColor, state.penaltyAccumulator, state.penaltyCardType)
   );

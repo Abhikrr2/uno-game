@@ -9,17 +9,7 @@
  * @returns {boolean} - True if the card play is valid, false otherwise.
  */
 function isValidPlay(card, topCard, currentColor, penaltyAccumulator = 0, penaltyCardType = null) {
-  // If there is an active stacking penalty that the player must respond to
-  if (penaltyAccumulator > 0 && penaltyCardType) {
-    if (penaltyCardType === 'draw2') {
-      // Only stack another +2 card
-      return card.type === 'draw2';
-    }
-    if (penaltyCardType === 'wild4') {
-      // Only stack another +4 card
-      return card.type === 'wild4';
-    }
-  }
+  // Stacking is disabled in official rules. Any penalty is resolved immediately on turn start.
 
   // Wild cards (Wild, Wild4) can be played on any card
   if (card.color === 'Wild' || card.type === 'wild' || card.type === 'wild4') {

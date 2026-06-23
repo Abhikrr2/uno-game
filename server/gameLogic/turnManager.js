@@ -103,6 +103,10 @@ function playCard(roomState, playerId, cardId, chosenColor = null) {
     throw new Error('Not your turn');
   }
 
+  if (roomState.challenge) {
+    throw new Error('A challenge is pending. You must resolve the challenge first.');
+  }
+
   const player = roomState.players.find(p => p.id === playerId);
   if (!player) {
     throw new Error('Player not found in room');
@@ -117,8 +121,12 @@ function playCard(roomState, playerId, cardId, chosenColor = null) {
 
   // Validate the play using current validator logic
   if (!isValidPlay(card, roomState.topCard, roomState.currentColor, roomState.penaltyAccumulator, roomState.penaltyCardType)) {
-    throw new Error('Invalid play: Card does not match color/value or stack requirement');
+    throw new Error('Invalid play: Card does not match color/value');
   }
+
+  // Clear last challenge result messages
+  roomState.challengeSuccess = null;
+  roomState.lastChallengeResult = null;
 
   // Remove card from player hand
   player.cards.splice(cardIndex, 1);
@@ -130,10 +138,12 @@ function playCard(roomState, playerId, cardId, chosenColor = null) {
     player.unoDeclared = false;
   }
 
+  // Save color before updating (for wild4 challenge check)
+  const preWildColor = roomState.currentColor;
+
   // Set color: for Wilds it's chosenColor, otherwise the card's native color
   if (card.color === 'Wild') {
     if (!chosenColor || !['Red', 'Blue', 'Yellow', 'Green'].includes(chosenColor)) {
-      // If color not selected, server defaults or throws (we throw to force frontend choice)
       throw new Error('Color choice required for Wild card');
     }
     roomState.currentColor = chosenColor;
@@ -143,7 +153,33 @@ function playCard(roomState, playerId, cardId, chosenColor = null) {
 
   // Handle Win Condition
   if (player.cards.length === 0) {
+    // Resolve draw effects on next player before scoring
+    if (card.type === 'draw2') {
+      const currentIndex = roomState.players.findIndex(p => p.id === playerId);
+      const nextIndex = (currentIndex + roomState.direction + roomState.players.length) % roomState.players.length;
+      const nextPlayer = roomState.players[nextIndex];
+      const drawn = drawCardsFromDeck(roomState, 2);
+      nextPlayer.cards.push(...drawn);
+    } else if (card.type === 'wild4') {
+      const currentIndex = roomState.players.findIndex(p => p.id === playerId);
+      const nextIndex = (currentIndex + roomState.direction + roomState.players.length) % roomState.players.length;
+      const nextPlayer = roomState.players[nextIndex];
+      const drawn = drawCardsFromDeck(roomState, 4);
+      nextPlayer.cards.push(...drawn);
+    }
+
     roomState.gameStatus = 'finished';
+    
+    // Calculate winner's score from remaining cards in other players' hands
+    let totalScore = 0;
+    for (const p of roomState.players) {
+      if (p.id !== player.id) {
+        for (const c of p.cards) {
+          totalScore += c.score || 0;
+        }
+      }
+    }
+    player.score = totalScore;
     roomState.winner = player;
     return roomState;
   }
@@ -152,16 +188,12 @@ function playCard(roomState, playerId, cardId, chosenColor = null) {
   let stepsToAdvance = 1;
 
   if (card.type === 'number') {
-    // Normal card
     advanceTurn(roomState, stepsToAdvance);
   } else if (card.type === 'skip') {
-    // Skip next player
     stepsToAdvance = 2;
     advanceTurn(roomState, stepsToAdvance);
   } else if (card.type === 'reverse') {
-    // Reverse direction
     if (roomState.players.length === 2) {
-      // In 2-player game, Reverse works like Skip
       stepsToAdvance = 2;
     } else {
       roomState.direction *= -1;
@@ -169,15 +201,31 @@ function playCard(roomState, playerId, cardId, chosenColor = null) {
     }
     advanceTurn(roomState, stepsToAdvance);
   } else if (card.type === 'draw2') {
-    roomState.penaltyAccumulator += 2;
-    roomState.penaltyCardType = 'draw2';
-    advanceTurn(roomState, stepsToAdvance);
+    // Stacking is NOT allowed. Next player draws 2 immediately and turn is skipped.
+    const currentIndex = roomState.players.findIndex(p => p.id === playerId);
+    const nextIndex = (currentIndex + roomState.direction + roomState.players.length) % roomState.players.length;
+    const nextPlayer = roomState.players[nextIndex];
+    
+    const drawn = drawCardsFromDeck(roomState, 2);
+    nextPlayer.cards.push(...drawn);
+    nextPlayer.unoDeclared = false;
+    
+    advanceTurn(roomState, 2);
   } else if (card.type === 'wild') {
     advanceTurn(roomState, stepsToAdvance);
   } else if (card.type === 'wild4') {
-    roomState.penaltyAccumulator += 4;
-    roomState.penaltyCardType = 'wild4';
-    advanceTurn(roomState, stepsToAdvance);
+    // Stacking is NOT allowed. Set challenge state for next player B.
+    const currentIndex = roomState.players.findIndex(p => p.id === playerId);
+    const nextIndex = (currentIndex + roomState.direction + roomState.players.length) % roomState.players.length;
+    const nextPlayer = roomState.players[nextIndex];
+    
+    roomState.challenge = {
+      challengerId: nextPlayer.id,
+      targetId: playerId,
+      preWildColor: preWildColor
+    };
+    
+    advanceTurn(roomState, 1);
   }
 
   return roomState;
@@ -195,21 +243,18 @@ function drawCard(roomState, playerId) {
     throw new Error('Not your turn');
   }
 
+  if (roomState.challenge) {
+    throw new Error('A challenge is pending. You must accept or challenge the +4.');
+  }
+
   const player = roomState.players.find(p => p.id === playerId);
   if (!player) {
     throw new Error('Player not found');
   }
 
-  // If there's a penalty stack, player must draw all of them and lose turn
-  if (roomState.penaltyAccumulator > 0) {
-    const drawn = drawCardsFromDeck(roomState, roomState.penaltyAccumulator);
-    player.cards.push(...drawn);
-    roomState.penaltyAccumulator = 0;
-    roomState.penaltyCardType = null;
-    player.unoDeclared = false;
-    advanceTurn(roomState);
-    return { roomState, drawn };
-  }
+  // Clear last challenge result messages
+  roomState.challengeSuccess = null;
+  roomState.lastChallengeResult = null;
 
   // Normal turn draw (draws 1 card)
   const drawn = drawCardsFromDeck(roomState, 1);
@@ -227,8 +272,6 @@ function drawCard(roomState, playerId) {
     );
 
     if (playable) {
-      // Send drawn card back, but don't advance turn yet (let them play or pass)
-      // We will have a 'pass' event or let them play the card
       return { roomState, drawn, canPlayDrawn: true };
     }
   }
@@ -287,6 +330,71 @@ function reportNoUno(roomState, reporterId, targetPlayerId) {
   return { roomState, target, success: false, drawnCount: 0 };
 }
 
+/**
+ * Accepts a Wild Draw Four penalty.
+ */
+function acceptChallenge(roomState, playerId) {
+  if (!roomState.challenge || roomState.challenge.challengerId !== playerId) {
+    throw new Error('No pending draw four challenge for you');
+  }
+
+  const player = roomState.players.find(p => p.id === playerId);
+  if (!player) throw new Error('Player not found');
+
+  const drawn = drawCardsFromDeck(roomState, 4);
+  player.cards.push(...drawn);
+  player.unoDeclared = false;
+
+  roomState.challenge = null;
+
+  advanceTurn(roomState);
+
+  return roomState;
+}
+
+/**
+ * Challenges a Wild Draw Four play.
+ */
+function executeChallenge(roomState, playerId) {
+  if (!roomState.challenge || roomState.challenge.challengerId !== playerId) {
+    throw new Error('No pending draw four challenge for you');
+  }
+
+  const targetPlayerId = roomState.challenge.targetId;
+  const preWildColor = roomState.challenge.preWildColor;
+
+  const player = roomState.players.find(p => p.id === playerId);
+  const target = roomState.players.find(p => p.id === targetPlayerId);
+
+  if (!player || !target) throw new Error('Players not found');
+
+  const hasMatchingColor = target.cards.some(c => c.color === preWildColor);
+
+  let challengeSuccess = false;
+  if (hasMatchingColor) {
+    challengeSuccess = true;
+    const drawn = drawCardsFromDeck(roomState, 4);
+    target.cards.push(...drawn);
+    target.unoDeclared = false;
+  } else {
+    challengeSuccess = false;
+    const drawn = drawCardsFromDeck(roomState, 6);
+    player.cards.push(...drawn);
+    player.unoDeclared = false;
+    advanceTurn(roomState);
+  }
+
+  roomState.challenge = null;
+  roomState.challengeSuccess = challengeSuccess;
+  roomState.lastChallengeResult = {
+    challengerName: player.name,
+    targetName: target.name,
+    success: challengeSuccess
+  };
+
+  return roomState;
+}
+
 module.exports = {
   startGame,
   playCard,
@@ -294,5 +402,7 @@ module.exports = {
   passTurn,
   declareUno,
   reportNoUno,
-  advanceTurn
+  advanceTurn,
+  acceptChallenge,
+  executeChallenge
 };

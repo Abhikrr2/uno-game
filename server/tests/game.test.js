@@ -43,14 +43,13 @@ describe('UNO Play Validator', () => {
     expect(isValidPlay(wild4, blue5, 'Blue')).toBe(true);
   });
 
-  test('should restrict card selection during stacking penalty', () => {
+  test('should not restrict card selection based on penalty accumulator as stacking is disabled', () => {
     const draw2Card = { id: '7', color: 'Red', type: 'draw2', value: 'Draw2' };
     const anotherDraw2 = { id: '8', color: 'Blue', type: 'draw2', value: 'Draw2' };
     
-    // Must stack a draw2 on top of active draw2 penalty
-    expect(isValidPlay(anotherDraw2, draw2Card, 'Red', 2, 'draw2')).toBe(true);
-    expect(isValidPlay(red5, draw2Card, 'Red', 2, 'draw2')).toBe(false);
-    expect(isValidPlay(wild4, draw2Card, 'Red', 2, 'draw2')).toBe(false);
+    // Stacking is disabled, so normal matching rules apply
+    expect(isValidPlay(anotherDraw2, draw2Card, 'Red', 0, null)).toBe(true);
+    expect(isValidPlay(red5, draw2Card, 'Red', 0, null)).toBe(true);
   });
 });
 
@@ -113,34 +112,106 @@ describe('UNO Turn Manager & Game Playthrough Flow', () => {
     expect(updated.currentTurn).toBe('u3'); // previous in reversed order is Charlie (u3)
   });
 
-  test('should accumulate penalty stacking and force draw on drawCard', () => {
+  test('should resolve Draw Two immediately on next player and skip their turn', () => {
     const state = startGame(players);
     
-    // Give u1 and u2 +2 cards
-    const draw2_1 = { id: 'd2-1', color: state.currentColor, type: 'draw2', value: 'Draw2' };
-    const draw2_2 = { id: 'd2-2', color: state.currentColor, type: 'draw2', value: 'Draw2' };
-    
-    state.players[0].cards.push(draw2_1);
-    state.players[1].cards.push(draw2_2);
+    // Give u1 a +2 card
+    const draw2Card = { id: 'd2-test', color: state.currentColor, type: 'draw2', value: 'Draw2' };
+    state.players[0].cards.push(draw2Card);
+
+    const initialHandSizeU2 = state.players[1].cards.length;
 
     // u1 plays +2
-    let updated = playCard(state, 'u1', 'd2-1');
-    expect(updated.penaltyAccumulator).toBe(2);
-    expect(updated.penaltyCardType).toBe('draw2');
-    expect(updated.currentTurn).toBe('u2');
-
-    // u2 stacks another +2
-    updated = playCard(updated, 'u2', 'd2-2');
-    expect(updated.penaltyAccumulator).toBe(4);
-    expect(updated.currentTurn).toBe('u3');
-
-    // u3 has no +2 cards and draws penalty stack
-    const initialHandSize = updated.players[2].cards.length;
-    const drawResult = drawCard(updated, 'u3');
+    const updated = playCard(state, 'u1', 'd2-test');
     
-    expect(drawResult.roomState.penaltyAccumulator).toBe(0);
-    expect(drawResult.roomState.players[2].cards.length).toBe(initialHandSize + 4);
-    expect(drawResult.roomState.currentTurn).toBe('u1'); // Turn advanced after drawing
+    // u2 should have drawn 2 cards immediately
+    expect(updated.players[1].cards.length).toBe(initialHandSizeU2 + 2);
+    // Turn should skip u2 and go to u3
+    expect(updated.currentTurn).toBe('u3');
+  });
+
+  test('should set up challenge state when wild4 is played and support accepting challenge', () => {
+    const state = startGame(players);
+    
+    // Give u1 a Wild Draw Four card
+    const wild4Card = { id: 'w4-test', color: 'Wild', type: 'wild4', value: 'Wild4' };
+    state.players[0].cards.push(wild4Card);
+
+    // u1 plays Wild Draw Four, choosing Blue
+    const updated = playCard(state, 'u1', 'w4-test', 'Blue');
+    
+    // Turn should advance to the challenger (u2)
+    expect(updated.currentTurn).toBe('u2');
+    // Challenge state should be set up
+    expect(updated.challenge).toBeDefined();
+    expect(updated.challenge.challengerId).toBe('u2');
+    expect(updated.challenge.targetId).toBe('u1');
+
+    // u2 accepts challenge
+    const initialHandSizeU2 = updated.players[1].cards.length;
+    const { acceptChallenge } = require('../gameLogic/turnManager');
+    const resolved = acceptChallenge(updated, 'u2');
+
+    // u2 draws 4 cards
+    expect(resolved.players[1].cards.length).toBe(initialHandSizeU2 + 4);
+    // Challenge is cleared
+    expect(resolved.challenge).toBeNull();
+    // Turn advances to u3 (u2 lost turn)
+    expect(resolved.currentTurn).toBe('u3');
+  });
+
+  test('should handle successful wild4 challenge (u1 played illegally)', () => {
+    const state = startGame(players);
+    
+    // Ensure u1 has a card matching the currentColor to make the play illegal
+    const originalColor = state.currentColor;
+    const matchingCard = { id: 'match', color: originalColor, type: 'number', value: '5' };
+    state.players[0].cards.push(matchingCard);
+
+    // Give u1 a Wild Draw Four card
+    const wild4Card = { id: 'w4-test', color: 'Wild', type: 'wild4', value: 'Wild4' };
+    state.players[0].cards.push(wild4Card);
+
+    // u1 plays Wild Draw Four
+    const updated = playCard(state, 'u1', 'w4-test', 'Blue');
+
+    // u2 executes challenge
+    const initialHandSizeU1 = updated.players[0].cards.length;
+    const { executeChallenge } = require('../gameLogic/turnManager');
+    const resolved = executeChallenge(updated, 'u2');
+
+    // Challenge is successful (u1 had matching color)
+    expect(resolved.challengeSuccess).toBe(true);
+    // Target (u1) draws 4 penalty cards
+    expect(resolved.players[0].cards.length).toBe(initialHandSizeU1 + 4);
+    // Challenger (u2) plays normally: current turn is still u2
+    expect(resolved.currentTurn).toBe('u2');
+  });
+
+  test('should handle failed wild4 challenge (u1 played legally)', () => {
+    const state = startGame(players);
+    
+    // Clear u1's cards matching the currentColor so play is legal
+    state.players[0].cards = state.players[0].cards.filter(c => c.color !== state.currentColor);
+    
+    // Give u1 a Wild Draw Four card
+    const wild4Card = { id: 'w4-test', color: 'Wild', type: 'wild4', value: 'Wild4' };
+    state.players[0].cards.push(wild4Card);
+
+    // u1 plays Wild Draw Four
+    const updated = playCard(state, 'u1', 'w4-test', 'Blue');
+
+    // u2 executes challenge
+    const initialHandSizeU2 = updated.players[1].cards.length;
+    const { executeChallenge } = require('../gameLogic/turnManager');
+    const resolved = executeChallenge(updated, 'u2');
+
+    // Challenge is failed
+    expect(resolved.challengeSuccess).toBe(false);
+    // Challenger (u2) draws 6 penalty cards (4 + 2 penalty)
+    expect(resolved.players[1].cards.length).toBe(initialHandSizeU2 + 6);
+    // Challenger (u2) loses turn: current turn advances to u3
+    expect(resolved.currentTurn).toBe('u3');
   });
 
   test('should handle UNO declarations and penalties', () => {
